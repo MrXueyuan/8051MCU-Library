@@ -1,0 +1,24 @@
+C51 COMPILER V9.57.0.0   ____2                                                             04/30/2018 12:54:53 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE ____2
+OBJECT MODULE PLACED IN .\Objects\例程2.obj
+COMPILER INVOKED BY: E:\STCMCU\Keil-v5\C51\BIN\C51.EXE 例程2.c OPTIMIZE(7,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listi
+                    -ngs\例程2.lst) TABS(2) OBJECT(.\Objects\例程2.obj)
+
+line level    source
+
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    795    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      8       5
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,6 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\TimeShow" 
+REGFILE (.\Objects\TimeShow.ORC) 
+PRINT(".\Listings\TimeShow.map") CLASSES (XDATA (X:0x0-X:0xFF), HDATA (X:0x0-X:0xFF), CODE (C:0x0-C:0x1FFF), CONST (C:0x0-C:0x1FFF), 
+ECODE (C:0x0-C:0x1FFF), HCONST (C:0x0-C:0x1FFF)) 

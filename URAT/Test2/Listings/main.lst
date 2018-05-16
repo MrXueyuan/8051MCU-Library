@@ -1,0 +1,446 @@
+C51 COMPILER V9.57.0.0   MAIN                                                              04/30/2018 16:54:58 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\STCMCU\Keil-v5\C51\BIN\C51.EXE main.c LARGE OBJECTADVANCED OPTIMIZE(9,SPEED) REGFILE(.\Objects\u
+                    -rat.ORC) BROWSE DEBUG PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          
+   2          //***************************************
+   3          // GY-52 MPU3050 IIC测试程序
+   4          // 使用单片机STC89C51 
+   5          // 晶振：11.0592M
+   6          // 显示：LCD1602
+   7          // 编译环境 Keil uVision2
+   8          // 参考宏晶网站24c04通信程序
+   9          // 时间：2011年9月1日
+  10          // QQ：531389319
+  11          //****************************************
+  12          #include  <REG52.H> 
+  13          #include  <math.h>    //Keil library  
+  14          #include  <stdio.h>   //Keil library  
+  15          #include  <INTRINS.H>
+  16          #define   uchar unsigned char
+  17          #define   uint unsigned int 
+  18          #define   DataPort P0    //LCD1602数据端口
+  19          sbit    SCL=P1^0;      //IIC时钟引脚定义
+  20          sbit    SDA=P1^1;      //IIC数据引脚定义
+  21          sbit      LCM_RS=P2^0;   //LCD1602命令端口    
+  22          sbit      LCM_RW=P2^1;   //LCD1602命令端口    
+  23          sbit      LCM_EN=P2^2;   //LCD1602命令端口 
+  24          #define FOSC    11059200L
+  25          #define BAUD  9600
+  26          sfr AUXR  =0x8E;
+  27          //定义MPU3050内部地址********************
+  28          #define WHO     0x00
+  29          #define SMPL  0x15
+  30          #define DLPF  0x16
+  31          #define INT_C 0x17
+  32          #define INT_S 0x1A
+  33          #define TMP_H 0x1B
+  34          #define TMP_L 0x1C
+  35          #define GX_H  0x1D
+  36          #define GX_L  0x1E
+  37          #define GY_H  0x1F
+  38          #define GY_L  0x20
+  39          #define GZ_H  0x21
+  40          #define GZ_L  0x22
+  41          #define PWR_M 0x3E
+  42          //****************************
+  43          
+  44          #define SlaveAddress   0xD0   //定义器件在IIC总线中的从地址,根据ALT  ADDRESS地址引脚不�
+             -��修改
+  45                                    
+  46          typedef unsigned char  BYTE;
+  47          typedef unsigned short WORD;
+  48          int *output;
+  49          uchar dis[4];                         //显示数组
+  50          BYTE BUF[8];                         //接收数据缓存区        
+  51          bit busy=0;
+  52          int  dis_data;                       //变量
+  53          int Temperature,Temp_h,Temp_l;
+C51 COMPILER V9.57.0.0   MAIN                                                              04/30/2018 16:54:58 PAGE 2   
+
+  54          void delay(unsigned int k);
+  55          void InitLcd();                     //初始化lcd1602
+  56          void InitMPU3050();                 //初始化MPU3050
+  57          
+  58          void WriteDataLCM(uchar dataW);
+  59          void WriteCommandLCM(uchar CMD,uchar Attribc);
+  60          void DisplayOneChar(uchar X,uchar Y,uchar DData);
+  61          void DisplayListChar(uchar X,uchar Y,uchar *DData,L);
+  62          
+  63          void  Single_WriteMPU3050(uchar REG_Address,uchar REG_data);   //单个写入数据
+  64          uchar Single_ReadMPU3050(uchar REG_Address);                   //单个读取内部寄存器数据
+  65          
+  66          //****************************************模拟IIC使用函数
+  67          void Delay5us();
+  68          void MPU3050_Start();
+  69          void MPU3050_Stop();
+  70          void MPU3050_SendACK(bit ack);
+  71          bit  MPU3050_RecvACK();
+  72          void MPU3050_SendByte(BYTE dat);
+  73          BYTE MPU3050_RecvByte();
+  74          void MPU3050_ReadPage();
+  75          void MPU3050_WritePage();
+  76          //****************************************
+  77          void display_x();
+  78          void display_y();
+  79          void display_z();
+  80          
+  81          //****************************************
+  82          
+  83          void lcd_printf(uchar *s,int temp_data)
+  84          {
+  85   1        if(temp_data<0){
+  86   2        temp_data=-temp_data;
+  87   2          *s='-';
+  88   2        }
+  89   1        else *s=' ';
+  90   1          *++s =temp_data/100+0x30;
+  91   1          temp_data=temp_data%100;     //取余运算
+  92   1          *++s =temp_data/10+0x30;
+  93   1          temp_data=temp_data%10;      //取余运算
+  94   1          *++s =temp_data+0x30;   
+  95   1      }
+  96          
+  97          /*******************************/
+  98          void delay(unsigned int k)  
+  99          {           
+ 100   1      unsigned int i,j;       
+ 101   1      for(i=0;i<k;i++)
+ 102   1      {     
+ 103   2      for(j=0;j<121;j++)      
+ 104   2      {;}}            
+ 105   1      }
+ 106          /*******************************/
+ 107          void WaitForEnable(void)  
+ 108          {         
+ 109   1      DataPort=0xff;    
+ 110   1      LCM_RS=0;LCM_RW=1;_nop_();
+ 111   1      LCM_EN=1;_nop_();_nop_();
+ 112   1      while(DataPort&0x80); 
+ 113   1      LCM_EN=0;       
+ 114   1      }         
+ 115          /*******************************/
+C51 COMPILER V9.57.0.0   MAIN                                                              04/30/2018 16:54:58 PAGE 3   
+
+ 116          void WriteCommandLCM(uchar CMD,uchar Attribc)
+ 117          {         
+ 118   1      if(Attribc)WaitForEnable(); 
+ 119   1      LCM_RS=0;LCM_RW=0;_nop_();
+ 120   1      DataPort=CMD;_nop_(); 
+ 121   1      LCM_EN=1;_nop_();_nop_();LCM_EN=0;
+ 122   1      }         
+ 123          /*******************************/
+ 124          void WriteDataLCM(uchar dataW)
+ 125          {         
+ 126   1      WaitForEnable();    
+ 127   1      LCM_RS=1;LCM_RW=0;_nop_();
+ 128   1      DataPort=dataW;_nop_(); 
+ 129   1      LCM_EN=1;_nop_();_nop_();LCM_EN=0;
+ 130   1      }   
+ 131          /***********************************/
+ 132          void InitLcd()        
+ 133          {     
+ 134   1      WriteCommandLCM(0x38,1);  
+ 135   1      WriteCommandLCM(0x08,1);  
+ 136   1      WriteCommandLCM(0x01,1);  
+ 137   1      WriteCommandLCM(0x06,1);  
+ 138   1      WriteCommandLCM(0x0c,1);
+ 139   1      DisplayOneChar(0,0,'x');
+ 140   1      DisplayOneChar(1,0,':');
+ 141   1      DisplayOneChar(0,1,'y');
+ 142   1      DisplayOneChar(1,1,':');
+ 143   1      DisplayOneChar(9,0,'z');
+ 144   1      DisplayOneChar(10,0,':');
+ 145   1      DisplayOneChar(9,1,'T');
+ 146   1      DisplayOneChar(10,1,':');
+ 147   1      }     
+ 148          /***********************************/
+ 149          void DisplayOneChar(uchar X,uchar Y,uchar DData)
+ 150          {           
+ 151   1      Y&=1;           
+ 152   1      X&=15;            
+ 153   1      if(Y)X|=0x40;         
+ 154   1      X|=0x80;      
+ 155   1      WriteCommandLCM(X,0);   
+ 156   1      WriteDataLCM(DData);    
+ 157   1      }           
+ 158          /***********************************/
+ 159          void DisplayListChar(uchar X,uchar Y,uchar *DData,L)
+ 160          {
+ 161   1      uchar ListLength=0; 
+ 162   1      Y&=0x1;                
+ 163   1      X&=0xF;                
+ 164   1      while(L--)             
+ 165   1      {                       
+ 166   2      DisplayOneChar(X,Y,DData[ListLength]);
+ 167   2      ListLength++;  
+ 168   2      X++;                        
+ 169   2      }    
+ 170   1      }
+ 171          /**************************************
+ 172          延时5微秒(STC90C52RC@12M)
+ 173          不同的工作环境,需要调整此函数，注意时钟过快时需要修改
+ 174          当改用1T的MCU时,请调整此延时函数
+ 175          **************************************/
+ 176          void Delay5us()   //@11.0592MHz
+ 177          {
+C51 COMPILER V9.57.0.0   MAIN                                                              04/30/2018 16:54:58 PAGE 4   
+
+ 178   1        unsigned char i;
+ 179   1      
+ 180   1        _nop_();
+ 181   1        i = 11;
+ 182   1        while (--i);
+ 183   1      }
+ 184          
+ 185          
+ 186            
+ 187          void SendData(unsigned char dat)
+ 188          {
+ 189   1        while(busy);
+ 190   1        SBUF=dat;
+ 191   1        busy=1;
+ 192   1      }
+ 193          void SendString(int *s)
+ 194          {
+ 195   1        while(*s!='\0')
+ 196   1          SendData(*s++);
+ 197   1      }
+ 198          
+ 199          
+ 200          /**************************************
+ 201          起始信号
+ 202          **************************************/
+ 203          void MPU3050_Start()
+ 204          {
+ 205   1          SDA = 1;                    //拉高数据线
+ 206   1          SCL = 1;                    //拉高时钟线
+ 207   1          Delay5us();                 //延时
+ 208   1          SDA = 0;                    //产生下降沿
+ 209   1          Delay5us();                 //延时
+ 210   1          SCL = 0;                    //拉低时钟线
+ 211   1      }
+ 212          
+ 213          /**************************************
+ 214          停止信号
+ 215          **************************************/
+ 216          void MPU3050_Stop()
+ 217          {
+ 218   1          SDA = 0;                    //拉低数据线
+ 219   1          SCL = 1;                    //拉高时钟线
+ 220   1          Delay5us();                 //延时
+ 221   1          SDA = 1;                    //产生上升沿
+ 222   1          Delay5us();                 //延时
+ 223   1      }
+ 224          
+ 225          /**************************************
+ 226          发送应答信号
+ 227          入口参数:ack (0:ACK 1:NAK)
+ 228          **************************************/
+ 229          void MPU3050_SendACK(bit ack)
+ 230          {
+ 231   1          SDA = ack;                  //写应答信号
+ 232   1          SCL = 1;                    //拉高时钟线
+ 233   1          Delay5us();                 //延时
+ 234   1          SCL = 0;                    //拉低时钟线
+ 235   1          Delay5us();                 //延时
+ 236   1      }
+ 237          
+ 238          /**************************************
+ 239          接收应答信号
+C51 COMPILER V9.57.0.0   MAIN                                                              04/30/2018 16:54:58 PAGE 5   
+
+ 240          **************************************/
+ 241          bit MPU3050_RecvACK()
+ 242          {
+ 243   1          SCL = 1;                    //拉高时钟线
+ 244   1          Delay5us();                 //延时
+ 245   1          CY = SDA;                   //读应答信号
+ 246   1          SCL = 0;                    //拉低时钟线
+ 247   1          Delay5us();                 //延时
+ 248   1      
+ 249   1          return CY;
+ 250   1      }
+ 251          
+ 252          /**************************************
+ 253          向IIC总线发送一个字节数据
+ 254          **************************************/
+ 255          void MPU3050_SendByte(BYTE dat)
+ 256          {
+ 257   1          BYTE i;
+ 258   1      
+ 259   1          for (i=0; i<8; i++)         //8位计数器
+ 260   1          {
+ 261   2              dat <<= 1;              //移出数据的最高位
+ 262   2              SDA = CY;               //送数据口
+ 263   2              SCL = 1;                //拉高时钟线
+ 264   2              Delay5us();             //延时
+ 265   2              SCL = 0;                //拉低时钟线
+ 266   2              Delay5us();             //延时
+ 267   2          }
+ 268   1          MPU3050_RecvACK();
+ 269   1      }
+ 270          
+ 271          /**************************************
+ 272          从IIC总线接收一个字节数据
+ 273          **************************************/
+ 274          BYTE MPU3050_RecvByte()
+ 275          {
+ 276   1          BYTE i;
+ 277   1          BYTE dat = 0;
+ 278   1      
+ 279   1          SDA = 1;                    //使能内部上拉,准备读取数据,
+ 280   1          for (i=0; i<8; i++)         //8位计数器
+ 281   1          {
+ 282   2              dat <<= 1;
+ 283   2              SCL = 1;                //拉高时钟线
+ 284   2              Delay5us();             //延时
+ 285   2              dat |= SDA;             //读数据               
+ 286   2              SCL = 0;                //拉低时钟线
+ 287   2              Delay5us();             //延时
+ 288   2          }
+ 289   1          return dat;
+ 290   1      }
+ 291          
+ 292          //单字节写入*******************************************
+ 293          
+ 294          void Single_WriteMPU3050(uchar REG_Address,uchar REG_data)
+ 295          {
+ 296   1          MPU3050_Start();                  //起始信号
+ 297   1          MPU3050_SendByte(SlaveAddress);   //发送设备地址+写信号
+ 298   1          MPU3050_SendByte(REG_Address);    //内部寄存器地址，
+ 299   1          MPU3050_SendByte(REG_data);       //内部寄存器数据，
+ 300   1          MPU3050_Stop();                   //发送停止信号
+ 301   1      }
+C51 COMPILER V9.57.0.0   MAIN                                                              04/30/2018 16:54:58 PAGE 6   
+
+ 302          
+ 303          //单字节读取*****************************************
+ 304          uchar Single_ReadMPU3050(uchar REG_Address)
+ 305          {  uchar REG_data;
+ 306   1          MPU3050_Start();                          //起始信号
+ 307   1          MPU3050_SendByte(SlaveAddress);           //发送设备地址+写信号
+ 308   1          MPU3050_SendByte(REG_Address);            //发送存储单元地址，从0开始 
+ 309   1          MPU3050_Start();                          //起始信号
+ 310   1          MPU3050_SendByte(SlaveAddress+1);         //发送设备地址+读信号
+ 311   1          REG_data=MPU3050_RecvByte();              //读出寄存器数据
+ 312   1        MPU3050_SendACK(1);   
+ 313   1        MPU3050_Stop();                           //停止信号
+ 314   1          return REG_data; 
+ 315   1      }
+ 316          
+ 317          //初始化MPU3050，根据需要请参考pdf进行修改************************
+ 318          void InitMPU3050()
+ 319          {
+ 320   1         Single_WriteMPU3050(PWR_M, 0x80);   //
+ 321   1         Single_WriteMPU3050(SMPL, 0x07);    //
+ 322   1         Single_WriteMPU3050(DLPF, 0x1E);    //±2000°
+ 323   1         Single_WriteMPU3050(INT_C, 0x00 );  //
+ 324   1         Single_WriteMPU3050(PWR_M, 0x00);   //
+ 325   1      }
+ 326          //***********************************************************************
+ 327          //显示x轴
+ 328          void display_x()
+ 329          {  
+ 330   1          BUF[0]= Single_ReadMPU3050(GX_L);
+ 331   1          BUF[1]= Single_ReadMPU3050(GX_H);
+ 332   1          dis_data=(BUF[1]<<8)+BUF[0];   //合成数据   
+ 333   1          dis_data/=16.4;              //计算对应 度/秒
+ 334   1          output = &dis_data;
+ 335   1          SendString(&output);
+*** WARNING C182 IN LINE 335 OF main.c: pointer to different objects
+ 336   1          //lcd_printf(dis, dis_data);     //转换数据显示  
+ 337   1          //DisplayListChar(2,0,dis,4);    //启始列，行，显示数组，显示长度
+ 338   1      }
+ 339          
+ 340          //***********************************************************************
+ 341          //显示y轴
+ 342          void display_y()
+ 343          {    
+ 344   1          BUF[2]= Single_ReadMPU3050(GY_L);
+ 345   1          BUF[3]= Single_ReadMPU3050(GY_H);
+ 346   1          dis_data=(BUF[3]<<8)+BUF[2];   //合成数据   
+ 347   1          dis_data/=16.4;              //计算对应 度/秒
+ 348   1          output = &dis_data;
+ 349   1          SendString(&output);
+*** WARNING C182 IN LINE 349 OF main.c: pointer to different objects
+ 350   1          //lcd_printf(dis, dis_data);     //转换数据显示
+ 351   1          //DisplayListChar(2,1,dis,4);    //启始列，行，显示数组，显示位数
+ 352   1      }
+ 353          
+ 354          //***********************************************************************
+ 355          //显示z轴
+ 356          void display_z()
+ 357          { 
+ 358   1          BUF[4]= Single_ReadMPU3050(GZ_L);
+ 359   1          BUF[5]= Single_ReadMPU3050(GZ_H);
+ 360   1          dis_data=(BUF[5]<<8)+BUF[4];     //合成数据   
+ 361   1          dis_data/=16.4;                //计算对应 度/秒
+C51 COMPILER V9.57.0.0   MAIN                                                              04/30/2018 16:54:58 PAGE 7   
+
+ 362   1          output = &dis_data;
+ 363   1          SendString(&output);
+*** WARNING C182 IN LINE 363 OF main.c: pointer to different objects
+ 364   1          //lcd_printf(dis, dis_data);       //转换数据显示
+ 365   1          //DisplayListChar(11,0,dis,4);     //启始列，行，显示数组，显示位数
+ 366   1      }
+ 367          
+ 368          
+ 369          void uart1() interrupt 4
+ 370          {
+ 371   1        if(RI)
+ 372   1          RI=0;
+ 373   1        if(TI)
+ 374   1          TI=0;
+ 375   1          busy=0;
+ 376   1      }
+ 377          
+ 378          //*********************************************************
+ 379          //******主程序********
+ 380          //*********************************************************
+ 381          void main()
+ 382          { 
+ 383   1        delay(500);                    //上电延时
+ 384   1        
+ 385   1        SCON=0x50;
+ 386   1        AUXR=0x14;
+ 387   1        AUXR|=0x01;
+ 388   1        TL2=(65536-((FOSC/4)/BAUD));
+ 389   1        TH2=(65536-((FOSC/4)/BAUD))>>8;
+ 390   1        ES=1;
+ 391   1        EA=1;   
+ 392   1        //InitLcd();                       //液晶初始化
+ 393   1        InitMPU3050();                   //初始化MPU3050
+ 394   1        delay(50);
+ 395   1        while(1)                         //循环
+ 396   1        {   
+ 397   2          display_x();                   //---------显示X轴
+ 398   2          display_y();                   //---------显示Y轴
+ 399   2          display_z();                   //---------显示Z轴
+ 400   2          delay(10000);                    //延时            
+ 401   2        }
+ 402   1      } 
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1206    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     23      16
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1       1
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  3 WARNING(S),  0 ERROR(S)

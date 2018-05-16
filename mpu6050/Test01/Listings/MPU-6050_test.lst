@@ -1,0 +1,320 @@
+C51 COMPILER V9.57.0.0   MPU_6050_TEST                                                     04/29/2018 12:09:49 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE MPU_6050_TEST
+OBJECT MODULE PLACED IN .\Objects\MPU-6050_test.obj
+COMPILER INVOKED BY: E:\STCMCU\Keil-v5\C51\BIN\C51.EXE MPU-6050_test.c OPTIMIZE(7,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT
+                    -(.\Listings\MPU-6050_test.lst) TABS(2) OBJECT(.\Objects\MPU-6050_test.obj)
+
+line level    source
+
+   1          //  MCU:STC15W408AS
+   2          //  晶振：11.0592M
+   3          // GY-52 MPU3050 IIC测试程序
+   4          
+   5          /*头文件*/
+   6          #include "STC15.h"      //STC15W系列单片机头文件
+   7          #include <math.h>       //数学计算头文件
+   8          #include <stdio.h>      //8051标准串口输入输出头文件
+   9          #include <INTRINS.H>    //_nop_空函数头文件
+  10          
+  11          /*简化数据类型名*/
+  12          typedef unsigned char  uchar;
+  13          typedef unsigned short ushort;
+  14          typedef unsigned int   uint;
+  15          
+  16          /*IIC引脚定义*/
+  17          sbit    SCL=P1^0;       //IIC时钟
+  18          sbit    SDA=P1^1;       //IIC数据
+  19          
+  20          // 定义MPU6050内部地址
+  21          #define SMPLRT_DIV    0x19  //陀螺仪采样率，典型值：0x07(125Hz)
+  22          #define CONFIG      0x1A  //低通滤波频率，典型值：0x06(5Hz)
+  23          #define GYRO_CONFIG   0x1B  //陀螺仪自检及测量范围，典型值：0x18(不自检，2000deg/s)
+  24          #define ACCEL_CONFIG  0x1C  //加速计自检、测量范围及高通滤波频率，典型值：0x01(不自检，2G，5Hz)
+  25          #define ACCEL_XOUT_H  0x3B
+  26          #define ACCEL_XOUT_L  0x3C
+  27          #define ACCEL_YOUT_H  0x3D
+  28          #define ACCEL_YOUT_L  0x3E
+  29          #define ACCEL_ZOUT_H  0x3F
+  30          #define ACCEL_ZOUT_L  0x40
+  31          #define TEMP_OUT_H    0x41
+  32          #define TEMP_OUT_L    0x42
+  33          #define GYRO_XOUT_H   0x43
+  34          #define GYRO_XOUT_L   0x44  
+  35          #define GYRO_YOUT_H   0x45
+  36          #define GYRO_YOUT_L   0x46
+  37          #define GYRO_ZOUT_H   0x47
+  38          #define GYRO_ZOUT_L   0x48
+  39          #define PWR_MGMT_1    0x6B  //电源管理，典型值：0x00(正常启用)
+  40          #define WHO_AM_I    0x75  //IIC地址寄存器(默认数值0x68，只读)
+  41          #define SlaveAddress  0xD0  //IIC写入时的地址字节数据，+1为读取
+  42          
+  43          //定义类型及变量
+  44          uchar dis[6];                   //显示数字(-511至512)的字符数组
+  45          int dis_data;                   //变量
+  46          
+  47          //IIC操作预定义
+  48          void  I2C_Start();
+  49          void  I2C_Stop();
+  50          void  I2C_SendACK(bit ack);
+  51          bit   I2C_RecvACK();
+  52          void  I2C_SendByte(uchar dat);
+  53          uchar I2C_RecvByte();
+  54          void  I2C_ReadPage();
+C51 COMPILER V9.57.0.0   MPU_6050_TEST                                                     04/29/2018 12:09:49 PAGE 2   
+
+  55          void  I2C_WritePage();
+  56          void  display_ACCEL_x();
+  57          void  display_ACCEL_y();
+  58          void  display_ACCEL_z();
+  59          uchar Single_ReadI2C(uchar REG_Address);            //读取I2C数据
+  60          void  Single_WriteI2C(uchar REG_Address,uchar REG_data);  //向I2C写入数据
+  61          void  delay(unsigned int k);
+  62          
+  63          //串口
+  64          void init_uart()//9600bps@11.0592MHz
+  65          {
+  66   1        PCON &= 0x7F;   //波特率不倍速
+  67   1        SCON = 0x50;    //8位数据,可变波特率
+  68   1        AUXR |= 0x40;   //定时器1时钟为Fosc,即1T
+  69   1        AUXR &= 0xFE;   //串口1选择定时器1为波特率发生器
+  70   1        TMOD &= 0x0F;   //清除定时器1模式位
+  71   1        TMOD |= 0x20;   //设定定时器1为8位自动重装方式
+  72   1        TL1 = 0xDC;   //设定定时初值
+  73   1        TH1 = 0xDC;   //设定定时器重装值
+  74   1        ET1 = 0;    //禁止定时器1中断
+  75   1        TR1 = 1;    //启动定时器1
+  76   1      }
+  77          
+  78          //延时函数
+  79          void Delay5us()   //@11.0592MHz
+  80          {
+  81   1        unsigned char i;
+  82   1      
+  83   1        _nop_();
+  84   1        i = 11;
+  85   1        while (--i);
+  86   1      }
+  87          
+  88          void delay(unsigned int k)  
+  89          {           
+  90   1        unsigned int i,j;       
+  91   1        for(i=0;i<k;i++)
+  92   1        {     
+  93   2          for(j=0;j<121;j++);
+  94   2        }           
+  95   1      }
+  96          
+  97          //初始化MPU6050
+  98          void InitMPU6050()
+  99          {
+ 100   1        Single_WriteI2C(PWR_MGMT_1, 0x00);  //解除休眠状态
+ 101   1        Single_WriteI2C(SMPLRT_DIV, 0x07);
+ 102   1        Single_WriteI2C(CONFIG, 0x06);
+ 103   1        Single_WriteI2C(GYRO_CONFIG, 0x18);
+ 104   1        Single_WriteI2C(ACCEL_CONFIG, 0x01);
+ 105   1      }
+ 106          
+ 107          
+ 108          //I2C起始信号
+ 109          void I2C_Start()
+ 110          {
+ 111   1          SDA = 1;                    //拉高数据线
+ 112   1          SCL = 1;                    //拉高时钟线
+ 113   1          Delay5us();                 //延时
+ 114   1          SDA = 0;                    //产生下降沿
+ 115   1          Delay5us();                 //延时
+ 116   1          SCL = 0;                    //拉低时钟线
+C51 COMPILER V9.57.0.0   MPU_6050_TEST                                                     04/29/2018 12:09:49 PAGE 3   
+
+ 117   1      }
+ 118          //I2C停止信号
+ 119          void I2C_Stop()
+ 120          {
+ 121   1          SDA = 0;                    //拉低数据线
+ 122   1          SCL = 1;                    //拉高时钟线
+ 123   1          Delay5us();                 //延时
+ 124   1          SDA = 1;                    //产生上升沿
+ 125   1          Delay5us();                 //延时
+ 126   1      }
+ 127          //I2C发送应答信号
+ 128          //入口参数:ack (0:ACK 1:NAK)
+ 129          void I2C_SendACK(bit ack)
+ 130          {
+ 131   1          SDA = ack;                  //写应答信号
+ 132   1          SCL = 1;                    //拉高时钟线
+ 133   1          Delay5us();                 //延时
+ 134   1          SCL = 0;                    //拉低时钟线
+ 135   1          Delay5us();                 //延时
+ 136   1      }
+ 137          //I2C接收应答信号
+ 138          bit I2C_RecvACK()
+ 139          {
+ 140   1          SCL = 1;                    //拉高时钟线
+ 141   1          Delay5us();                 //延时
+ 142   1          CY = SDA;                   //读应答信号
+ 143   1          SCL = 0;                    //拉低时钟线
+ 144   1          Delay5us();                 //延时
+ 145   1          return CY;
+ 146   1      }
+ 147          //向I2C总线发送一个字节数据
+ 148          void I2C_SendByte(uchar dat)
+ 149          {
+ 150   1          uchar i;
+ 151   1          for (i=0; i<8; i++)         //8位计数器
+ 152   1          {
+ 153   2              dat <<= 1;              //移出数据的最高位
+ 154   2              SDA = CY;               //送数据口
+ 155   2              SCL = 1;                //拉高时钟线
+ 156   2              Delay5us();             //延时
+ 157   2              SCL = 0;                //拉低时钟线
+ 158   2              Delay5us();             //延时
+ 159   2          }
+ 160   1          I2C_RecvACK();
+ 161   1      }
+ 162          //从I2C总线接收一个字节数据
+ 163          uchar I2C_RecvByte()
+ 164          {
+ 165   1          uchar i;
+ 166   1          uchar dat = 0;
+ 167   1          SDA = 1;                    //使能内部上拉,准备读取数据,
+ 168   1          for (i=0; i<8; i++)         //8位计数器
+ 169   1          {
+ 170   2              dat <<= 1;
+ 171   2              SCL = 1;                //拉高时钟线
+ 172   2              Delay5us();             //延时
+ 173   2              dat |= SDA;             //读数据               
+ 174   2              SCL = 0;                //拉低时钟线
+ 175   2              Delay5us();             //延时
+ 176   2          }
+ 177   1          return dat;
+ 178   1      }
+C51 COMPILER V9.57.0.0   MPU_6050_TEST                                                     04/29/2018 12:09:49 PAGE 4   
+
+ 179          //向I2C设备写入一个字节数据
+ 180          void Single_WriteI2C(uchar REG_Address,uchar REG_data)
+ 181          {
+ 182   1          I2C_Start();                  //起始信号
+ 183   1          I2C_SendByte(SlaveAddress);   //发送设备地址+写信号
+ 184   1          I2C_SendByte(REG_Address);    //内部寄存器地址，
+ 185   1          I2C_SendByte(REG_data);       //内部寄存器数据，
+ 186   1          I2C_Stop();                   //发送停止信号
+ 187   1      }
+ 188          //从I2C设备读取一个字节数据
+ 189          uchar Single_ReadI2C(uchar REG_Address)
+ 190          {
+ 191   1        uchar REG_data;
+ 192   1        I2C_Start();                   //起始信号
+ 193   1        I2C_SendByte(SlaveAddress);    //发送设备地址+写信号
+ 194   1        I2C_SendByte(REG_Address);     //发送存储单元地址，从0开始  
+ 195   1        I2C_Start();                   //起始信号
+ 196   1        I2C_SendByte(SlaveAddress+1);  //发送设备地址+读信号
+ 197   1        REG_data=I2C_RecvByte();       //读出寄存器数据
+ 198   1        I2C_SendACK(1);                //接收应答信号
+ 199   1        I2C_Stop();                    //停止信号
+ 200   1        return REG_data;
+ 201   1      }
+ 202          //IIC数据合成
+ 203          int GetData(uchar REG_Address)
+ 204          {
+ 205   1        uchar H,L;
+ 206   1        H=Single_ReadI2C(REG_Address);
+ 207   1        L=Single_ReadI2C(REG_Address+1);
+ 208   1        return (H<<8)+L;   //合成数据
+ 209   1      }
+ 210          
+ 211          //数据推送至串口
+ 212          void  SeriPushSend(uchar send_data)
+ 213          {
+ 214   1          SBUF=send_data;  
+ 215   1        while(!TI);
+ 216   1          TI=0;   
+ 217   1      }
+ 218          
+ 219          //整数转换字符串
+ 220          void Transformation(uchar *s,int temp_data)
+ 221          {
+ 222   1        if(temp_data<0)
+ 223   1        {
+ 224   2          temp_data=-temp_data;
+ 225   2          *s='-';
+ 226   2        }
+ 227   1        else *s=' ';
+ 228   1      
+ 229   1        *++s =temp_data/10000+0x30;
+ 230   1        temp_data=temp_data%10000;     //取余运算
+ 231   1      
+ 232   1        *++s =temp_data/1000+0x30;
+ 233   1        temp_data=temp_data%1000;     //取余运算
+ 234   1      
+ 235   1        *++s =temp_data/100+0x30;
+ 236   1        temp_data=temp_data%100;     //取余运算
+ 237   1        *++s =temp_data/10+0x30;
+ 238   1        temp_data=temp_data%10;      //取余运算
+ 239   1        *++s =temp_data+0x30;   
+ 240   1      }
+C51 COMPILER V9.57.0.0   MPU_6050_TEST                                                     04/29/2018 12:09:49 PAGE 5   
+
+ 241          
+ 242          //输出数据
+ 243          void Display10BitData(int value,uchar x,uchar y)
+ 244          {   uchar i;
+ 245   1        Transformation(dis, value);     //转换数据显示
+ 246   1        for(i=0;i<6;i++)
+ 247   1        {
+ 248   2              SeriPushSend(dis[i]);
+ 249   2          }
+ 250   1      }
+*** WARNING C280 IN LINE 243 OF MPU-6050_test.c: 'x': unreferenced local variable
+*** WARNING C280 IN LINE 243 OF MPU-6050_test.c: 'y': unreferenced local variable
+ 251          
+ 252          int main (void) 
+ 253          {
+ 254   1        delay(500);   //上电延时    
+ 255   1        init_uart();    //初始化串口
+ 256   1        InitMPU6050();  //初始化MPU6050
+ 257   1        delay(150);     //延时
+ 258   1        while(1)
+ 259   1        {
+ 260   2        
+ 261   2          SeriPushSend('A');    
+ 262   2              SeriPushSend(0x20);SeriPushSend('X'); SeriPushSend(':');   
+ 263   2              Display10BitData(GetData(ACCEL_XOUT_H));    //显示X轴加速度  
+*** WARNING C209 IN LINE 263 OF MPU-6050_test.c: '_Display10BitData': too few actual parameters
+ 264   2              SeriPushSend(0x20);SeriPushSend('Y'); SeriPushSend(':');  
+ 265   2              Display10BitData(GetData(ACCEL_YOUT_H));    //显示Y轴加速度  
+*** WARNING C209 IN LINE 265 OF MPU-6050_test.c: '_Display10BitData': too few actual parameters
+ 266   2              SeriPushSend(0x20);SeriPushSend('Z'); SeriPushSend(':');  
+ 267   2              Display10BitData(GetData(ACCEL_ZOUT_H));    //显示Z轴加速度  
+*** WARNING C209 IN LINE 267 OF MPU-6050_test.c: '_Display10BitData': too few actual parameters
+ 268   2              SeriPushSend(0x20);   
+ 269   2              SeriPushSend('G');    
+ 270   2              SeriPushSend(0x20);SeriPushSend('X'); SeriPushSend(':');  
+ 271   2              Display10BitData(GetData(GYRO_XOUT_H));     //显示X轴角速度  
+*** WARNING C209 IN LINE 271 OF MPU-6050_test.c: '_Display10BitData': too few actual parameters
+ 272   2              SeriPushSend(0x20);SeriPushSend('Y'); SeriPushSend(':');  
+ 273   2              Display10BitData(GetData(GYRO_YOUT_H));     //显示Y轴角速度  
+*** WARNING C209 IN LINE 273 OF MPU-6050_test.c: '_Display10BitData': too few actual parameters
+ 274   2              SeriPushSend(0x20);SeriPushSend('Z'); SeriPushSend(':');  
+ 275   2              Display10BitData(GetData(GYRO_ZOUT_H));     //显示Z轴角速度          
+*** WARNING C209 IN LINE 275 OF MPU-6050_test.c: '_Display10BitData': too few actual parameters
+ 276   2              SeriPushSend(0x0d);   
+ 277   2              SeriPushSend(0x0a);//换行，回车  
+ 278   2              delay(2000); 
+ 279   2        }
+ 280   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    803    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      8       7
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  8 WARNING(S),  0 ERROR(S)

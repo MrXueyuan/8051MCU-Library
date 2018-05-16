@@ -1,0 +1,179 @@
+C51 COMPILER V9.57.0.0   MAIN                                                              05/02/2018 02:02:19 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\STCMCU\Keil-v5\C51\BIN\C51.EXE main.c OBJECTADVANCED OPTIMIZE(9,SPEED) REGFILE(.\Objects\TimeSho
+                    -w.ORC) BROWSE DEBUG PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "MCU_Doc.h"
+   2          
+   3          #define LED P20
+   4          #define DP  P0
+   5          #define DW1 P10
+   6          #define DW2 P11
+   7          #define DW3 P12
+   8          #define DW4 P13
+   9          
+  10          u8  count   = 0;
+  11          u8  second  = 0;
+  12          u8  minute  = 0;
+  13          u8  hour    = 0;
+  14          
+  15          //延时函数
+  16          void Delay1ms(uchar DTime) 
+  17          {
+  18   1          while (--DTime) {
+  19   2              uchar i, j;
+  20   2              i = 2;
+  21   2              j = 239;
+  22   2              do {
+  23   3                  while (--j);
+  24   3              }
+  25   2              while (--i);
+  26   2          }
+  27   1      }
+  28          
+  29          //中断程序
+  30          void InitFunction (void) interrupt 1 using 1 
+  31          {
+  32   1          
+  33   1          TL0 = 0xB0;   //设置定时初值
+  34   1          TH0 = 0x3C;   //设置定时初值
+  35   1          count++;
+  36   1          if (count>=20) {
+  37   2      
+  38   2              count = 0;
+  39   2              second++;
+  40   2              LED = ~LED;
+  41   2      
+  42   2              if (second>=60) {
+  43   3      
+  44   3                  second = 0;
+  45   3                  minute++;
+  46   3      
+  47   3                  if (minute>=60) {
+  48   4      
+  49   4                      minute = 0;
+  50   4                      hour++;
+  51   4      
+  52   4                      if (hour>=24)
+  53   4                          hour = 0;
+  54   4                  }
+C51 COMPILER V9.57.0.0   MAIN                                                              05/02/2018 02:02:19 PAGE 2   
+
+  55   3              }
+  56   2          }
+  57   1          if (count == 8)
+  58   1              LED = 1;
+  59   1      }
+  60          
+  61          void display_show (void) 
+  62          {
+  63   1          //小时-十位
+  64   1          DW1 = 0;
+  65   1          if ((hour/10)!=0)
+  66   1              DP  = a_displays [hour/10];
+  67   1          else if (count>=10)
+  68   1              DP  = a_displays [16];
+  69   1          else
+  70   1              DP  = a_displays [17];
+  71   1          Delay1ms (1);
+  72   1          DW1 = 1;
+  73   1          DP  = a_displays [16];
+  74   1          //小时-个位
+  75   1          DW2 = 0;
+  76   1          if (hour%10==0)
+  77   1              if ((hour/10)!=0)
+  78   1                  DP  = a_displays [0];
+  79   1              else if (count>=10)
+  80   1                  DP  = a_displays [16];
+  81   1                  else
+  82   1                      DP  = a_displays [17];
+  83   1          else
+  84   1              DP  = a_displays [hour%10];
+  85   1          Delay1ms (1);
+  86   1          DP  = 0x7F;
+  87   1          Delay1ms (1);
+  88   1          DW2 = 1;
+  89   1          DP  = a_displays [16];
+  90   1          //分钟-十位
+  91   1          DW3 = 0;
+  92   1          if ((minute/10)!=0)
+  93   1              DP  = a_displays [minute/10];
+  94   1          else if (count>=10)
+  95   1              DP  = a_displays [16];
+  96   1          else
+  97   1              DP  = a_displays [17];
+  98   1          Delay1ms (1);
+  99   1          DW3 = 1;
+ 100   1          DP  = a_displays [16];
+ 101   1          //分钟-个位
+ 102   1          DW4 = 0;
+ 103   1          if (minute%10==0)
+ 104   1              if ((minute/10)!=0)
+ 105   1                  DP  = a_displays [0];
+ 106   1              else if (count>=10)
+ 107   1                  DP  = a_displays [16];
+ 108   1                  else
+ 109   1                      DP  = a_displays [17];
+ 110   1          else
+ 111   1              DP  = a_displays [minute%10];
+ 112   1          Delay1ms (1);
+ 113   1          DW4 = 1;
+ 114   1          DP  = a_displays [16];
+ 115   1      }
+ 116          
+C51 COMPILER V9.57.0.0   MAIN                                                              05/02/2018 02:02:19 PAGE 3   
+
+ 117          //定时器0初始化
+ 118          void Timer0Init(void)   //50毫秒@12.000MHz
+ 119          {
+ 120   1        AUXR &= 0x7F;   //定时器时钟12T模式
+ 121   1        TMOD &= 0xF0;   //设置定时器模式
+ 122   1        TMOD |= 0x01;   //设置定时器模式
+ 123   1        TL0 = 0xB0;   //设置定时初值
+ 124   1        TH0 = 0x3C;   //设置定时初值
+ 125   1        TF0 = 0;    //清除TF0标志
+ 126   1        TR0 = 1;    //定时器0开始计时
+ 127   1      }
+ 128          
+ 129          int main (void) 
+ 130          {
+ 131   1          Delay1ms (5);       //上电延时
+ 132   1      
+ 133   1          EA = 1; ET0 = 1;    //打开中断
+ 134   1          Timer0Init ();  //定时器0初始化
+ 135   1          
+ 136   1          //端口初始化复位
+ 137   1          LED = 1;
+ 138   1          DW1 = 1;
+ 139   1          DW2 = 1;
+ 140   1          DW3 = 1;
+ 141   1          DW4 = 1;
+ 142   1      
+ 143   1          while (1) {
+ 144   2            display_show ();
+ 145   2          }
+ 146   1        while (1);
+ 147   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    436    ----
+   CONSTANT SIZE    =     36    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      4       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

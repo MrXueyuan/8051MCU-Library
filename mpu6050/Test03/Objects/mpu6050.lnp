@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\C51-6050-UART.obj" 
+TO ".\Objects\mpu6050" 
+
+PRINT(".\Listings\mpu6050.map")

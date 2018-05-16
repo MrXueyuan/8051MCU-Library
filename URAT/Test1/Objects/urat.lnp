@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\urat" 
+REGFILE (.\Objects\urat.ORC) 
+PRINT(".\Listings\urat.map")
