@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "config.h": "c",
+        "stc12.h": "c"
+    },
+    "C_Cpp.intelliSenseEngineFallback": "Disabled"
+}

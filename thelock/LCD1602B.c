@@ -135,7 +135,7 @@ void Write_DIS_Data(u8 dat)		//write the display data to LCD
 }
 
 
-/*********	³õÊ¼»¯º¯Êı	**************************/
+/*********	åˆå§‹åŒ–å‡½æ•°	**************************/
 void Initialize_LCD(void)		//intilize LCD, input none, output none
 {
 	LCD_ENA = 0;
@@ -177,7 +177,7 @@ void ClearLine(u8 hang)
 }
 
 
-/****************** Ğ´Ò»¸ö×Ö·û£¬Ö¸¶¨ĞĞ¡¢ÁĞºÍ×Ö·û ****************************/
+/****************** å†™ä¸€ä¸ªå­—ç¬¦ï¼ŒæŒ‡å®šè¡Œã€åˆ—å’Œå­—ç¬¦ ****************************/
 void	WriteChar(u8 hang,u8 lie,u8 dat)
 {
 	if((hang == 0) || (hang > 2))		return; 
@@ -186,10 +186,10 @@ void	WriteChar(u8 hang,u8 lie,u8 dat)
 	Write_DIS_Data(dat);
 }
 
-/****************** Ğ´Ò»¸ö×Ö·û´®£¬Ö¸¶¨ĞĞ¡¢ÁĞºÍ×Ö·û´®Ê×µØÖ· ****************************/
+/****************** å†™ä¸€ä¸ªå­—ç¬¦ä¸²ï¼ŒæŒ‡å®šè¡Œã€åˆ—å’Œå­—ç¬¦ä¸²é¦–åœ°å€ ****************************/
 void PutString(u8 hang,u8 lie,u8 *puts)
 {
-	for ( ;  *puts != 0;  puts++)		//Óöµ½Í£Ö¹·û0½áÊø
+	for ( ;  *puts != 0;  puts++)		//é‡åˆ°åœæ­¢ç¬¦0ç»“æŸ
 	{
 		WriteChar(hang, lie, *puts);
 		if(++lie > 20)	break;

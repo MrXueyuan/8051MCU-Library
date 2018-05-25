@@ -6,12 +6,14 @@
 #include "STC12.h"
 
 char key_namber = 0;
-unsigned char data password [] = {0,0,0,0,0,0};
-unsigned char data enter_psw [] ;
+unsigned char data password [6] = {0,0,0,0,0,0};
+unsigned char data enter_psw [6];
+unsigned char data input_flag = 0;
 
 
 void LCD_Refresh () {
-	
+	PutString (1,1,"Enter password: ");
+
 }
 
 int main (void) {
