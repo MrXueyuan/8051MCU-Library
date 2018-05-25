@@ -1,0 +1,8 @@
+".\Objects\STARTUP.obj",
+".\Objects\delay.obj",
+".\Objects\Keyboard.obj",
+".\Objects\LCD1602B.obj",
+".\Objects\main.obj" 
+TO ".\Objects\1602Lock" 
+
+PRINT(".\Listings\1602Lock.map")

@@ -1,11 +1,4 @@
-#include <REG52.H>
-#include <math.h>
-#include <stdio.h>
-#include <INTRINS.H>
-
-typedef unsigned char  uchar;
-typedef unsigned short ushort;
-typedef unsigned int   uint;
+#include "MCU_Doc.h"
 
 sbit    SCL=P1^0;
 sbit    SDA=P1^1;
