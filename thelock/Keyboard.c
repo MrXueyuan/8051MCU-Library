@@ -8,7 +8,7 @@ char read_key (void) {
 	P3=0xC3;
 	if(P3!=0xC3)
 	{	
-		delay_ms(2);
+		delay_ms(5);
 		if(P3!=0xC3)
 		{	
 			for(i=0;i<4;i++)
@@ -17,7 +17,6 @@ char read_key (void) {
 				for(j=0;j<16;j++)
 				if(key_val[j]==P3)
 					return j;
-				else return -1; 
 			}  	
 		}
 		else return -1;

@@ -176,6 +176,14 @@ void ClearLine(u8 hang)
 	for(i=0; i<LineLenth; i++)	Write_DIS_Data(' ');
 }
 
+/**********************************************/
+void ClearBit(u8 hang,u8 lie)
+{
+	if((hang == 0) || (hang > 2))		return;
+	if((lie == 0) || (lie > 16))		return;
+	Write_AC(hang,lie);
+	Write_DIS_Data(' ');
+}
 
 /****************** 写一个字符，指定行、列和字符 ****************************/
 void	WriteChar(u8 hang,u8 lie,u8 dat)
@@ -187,7 +195,7 @@ void	WriteChar(u8 hang,u8 lie,u8 dat)
 }
 
 /****************** 写一个字符串，指定行、列和字符串首地址 ****************************/
-void PutString(u8 hang,u8 lie,u8 *puts)
+void 	PutString(u8 hang,u8 lie,u8 *puts)
 {
 	for ( ;  *puts != 0;  puts++)		//遇到停止符0结束
 	{
@@ -195,7 +203,6 @@ void PutString(u8 hang,u8 lie,u8 *puts)
 		if(++lie > 20)	break;
 	}
 }
-
 
 //******************** LCD40 Module END ***************************
 

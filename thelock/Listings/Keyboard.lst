@@ -1,10 +1,10 @@
-C51 COMPILER V9.56.0.0   KEYBOARD                                                          05/23/2018 18:54:52 PAGE 1   
+C51 COMPILER V9.57.0.0   KEYBOARD                                                          05/28/2018 01:37:37 PAGE 1   
 
 
-C51 COMPILER V9.56.0.0, COMPILATION OF MODULE KEYBOARD
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE KEYBOARD
 OBJECT MODULE PLACED IN .\Objects\Keyboard.obj
-COMPILER INVOKED BY: D:\Program Files\Keil C51\C51\BIN\C51.EXE Keyboard.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Li
-                    -stings\Keyboard.lst) TABS(2) OBJECT(.\Objects\Keyboard.obj)
+COMPILER INVOKED BY: E:\STCMCU\Keil-v5\C51\BIN\C51.EXE Keyboard.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Listings\K
+                    -eyboard.lst) TABS(2) OBJECT(.\Objects\Keyboard.obj)
 
 line level    source
 
@@ -19,7 +19,7 @@ line level    source
    8   1        P3=0xC3;
    9   1        if(P3!=0xC3)
   10   1        { 
-  11   2          delay_ms(2);
+  11   2          delay_ms(5);
   12   2          if(P3!=0xC3)
   13   2          { 
   14   3            for(i=0;i<4;i++)
@@ -28,18 +28,17 @@ line level    source
   17   4              for(j=0;j<16;j++)
   18   4              if(key_val[j]==P3)
   19   4                return j;
-  20   4              else return -1; 
-  21   4            }   
-  22   3          }
-  23   2          else return -1;
-  24   2        }
-  25   1        else return -1;
-  26   1      }
-*** WARNING C291 IN LINE 26 OF Keyboard.c: not every exit path returns a value
+  20   4            }   
+  21   3          }
+  22   2          else return -1;
+  23   2        }
+  24   1        else return -1;
+  25   1      }
+*** WARNING C291 IN LINE 25 OF Keyboard.c: not every exit path returns a value
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =     88    ----
+   CODE SIZE        =     95    ----
    CONSTANT SIZE    =     20    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

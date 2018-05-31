@@ -1,69 +1,37 @@
-C51 COMPILER V9.56.0.0   DELAY                                                             05/23/2018 18:54:51 PAGE 1   
+C51 COMPILER V9.57.0.0   DELAY                                                             05/28/2018 01:37:37 PAGE 1   
 
 
-C51 COMPILER V9.56.0.0, COMPILATION OF MODULE DELAY
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE DELAY
 OBJECT MODULE PLACED IN .\Objects\delay.obj
-COMPILER INVOKED BY: D:\Program Files\Keil C51\C51\BIN\C51.EXE delay.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Listi
-                    -ngs\delay.lst) TABS(2) OBJECT(.\Objects\delay.obj)
+COMPILER INVOKED BY: E:\STCMCU\Keil-v5\C51\BIN\C51.EXE delay.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Listings\dela
+                    -y.lst) TABS(2) OBJECT(.\Objects\delay.obj)
 
 line level    source
 
    1          
-   2          /*---------------------------------------------------------------------*/
-   3          /* --- STC MCU International Limited ----------------------------------*/
-   4          /* --- STC 1T Series MCU Demo Programme -------------------------------*/
-   5          /* --- Mobile: (86)13922805190 ----------------------------------------*/
-   6          /* --- Fax: 86-0513-55012956,55012947,55012969 ------------------------*/
-   7          /* --- Tel: 86-0513-55012928,55012929,55012966 ------------------------*/
-   8          /* --- Web: www.GXWMCU.com --------------------------------------------*/
-   9          /* --- QQ:  800003751 -------------------------------------------------*/
-  10          /* 如果要在程序中使用此代码,请在程序中注明使用了宏晶科技的资料及程序   */
-  11          /*---------------------------------------------------------------------*/
+   2          #include  "delay.h"
+   3          
+   4          void  delay_ms(unsigned char ms)
+   5          {
+   6   1           unsigned int i;
+   7   1         do{
+   8   2              i = MAIN_Fosc / 13000;
+   9   2            while(--i)  ;   //14T per loop
+  10   2           }while(--ms);
+  11   1      }
   12          
-  13          
-  14          /*************  功能说明  **************
-  15          
-  16          本文件为STC15xxx系列的延时程序,用户几乎可以不修改这个程序.
-  17          
-  18          
-  19          ******************************************/
-  20          
-  21          #include  "delay.h"
-  22          
-  23          
-  24          
-  25          //========================================================================
-  26          // 函数: void  delay_ms(unsigned char ms)
-  27          // 描述: 延时函数。
-  28          // 参数: ms,要延时的ms数, 这里只支持1~255ms. 自动适应主时钟.
-  29          // 返回: none.
-  30          // 版本: VER1.0
-  31          // 日期: 2013-4-1
-  32          // 备注: 
-  33          //========================================================================
-  34          void  delay_ms(unsigned char ms)
-  35          {
-  36   1           unsigned int i;
-  37   1         do{
-  38   2              i = MAIN_Fosc / 13000;
-  39   2            while(--i)  ;   //14T per loop
-  40   2           }while(--ms);
-  41   1      }
-  42          
-  43          void delay_5us()    //@11.0592MHz
-  44          {
-  45   1        unsigned char i;
-  46   1        i = 10;
-  47   1        while (--i);
-  48   1      }
-  49          
+  13          void delay_5us()    //@11.0592MHz
+  14          {
+  15   1        unsigned char i;
+  16   1        i = 10;
+  17   1        while (--i);
+  18   1      }
+  19          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
    CODE SIZE        =     21    ----
    CONSTANT SIZE    =   ----    ----
-C51 COMPILER V9.56.0.0   DELAY                                                             05/23/2018 18:54:51 PAGE 2   
-
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----

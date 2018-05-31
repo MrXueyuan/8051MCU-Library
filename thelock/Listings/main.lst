@@ -1,10 +1,10 @@
-C51 COMPILER V9.56.0.0   MAIN                                                              05/23/2018 19:06:46 PAGE 1   
+C51 COMPILER V9.57.0.0   MAIN                                                              05/28/2018 01:37:38 PAGE 1   
 
 
-C51 COMPILER V9.56.0.0, COMPILATION OF MODULE MAIN
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE MAIN
 OBJECT MODULE PLACED IN .\Objects\main.obj
-COMPILER INVOKED BY: D:\Program Files\Keil C51\C51\BIN\C51.EXE main.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Listin
-                    -gs\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+COMPILER INVOKED BY: E:\STCMCU\Keil-v5\C51\BIN\C51.EXE main.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Listings\main.
+                    -lst) TABS(2) OBJECT(.\Objects\main.obj)
 
 line level    source
 
@@ -15,55 +15,124 @@ line level    source
    5          
    6          #include "STC12.h"
    7          
-   8          char key_namber = 0;
-   9          unsigned char data password [] = {0,0,0,0,0,0};
-  10          unsigned char data enter_psw [] ;
-  11          
-  12          
-  13          void LCD_Refresh () {
-  14   1        
-  15   1      }
-  16          
-  17          int main (void) {
-  18   1        delay_ms (5);
-  19   1        
-  20   1        Initialize_LCD();
-  21   1        ClearLine(1);
-  22   1        ClearLine(2);
-  23   1        PutString(1,1,"Fuck Bug!");
-  24   1        
-  25   1        while (1) {
-  26   2          unsigned char links_L = 0;
-  27   2          key_namber = read_key ();
-  28   2          if (key_namber != -1) {
-  29   3            if (key_namber ==3) {
-  30   4              PutString(2,links_L+1,'*');
-*** WARNING C196 IN LINE 30 OF main.c: mspace probably invalid
-  31   4              links_L++;
-  32   4              if (links_L>=4) {
-  33   5                links_L = 0;
-  34   5              }
-  35   4            }
-  36   3          }
-  37   2        }
-  38   1      }
+   8          char key_number = 0;
+   9          unsigned char xdata password [6] = {'0','0','5','4','0','3'};
+  10          unsigned char data enter_psw [6] = {' ',' ',' ',' ',' ',' '};
+  11          unsigned char data input_flag = 0;
+  12          unsigned char output_num;
+  13          bit shift_flag = 0;
+  14          
+  15          void num_judge () {
+  16   1        switch (key_number) {
+  17   2          case 0 : output_num = '0';
+  18   2            break;
+  19   2          case 1 : output_num = '1';
+  20   2            break;
+  21   2          case 2 : output_num = '2';
+  22   2            break;
+  23   2          case 3 : output_num = '3';
+  24   2            break;
+  25   2          case 4 : output_num = '4';
+  26   2            break;
+  27   2          case 5 : output_num = '5';
+  28   2            break;
+  29   2          case 6 : output_num = '6';
+  30   2            break;
+  31   2          case 7 : output_num = '7';
+  32   2            break;
+  33   2          case 8 : output_num = '8';
+  34   2            break;
+  35   2          case 9 : output_num = '9';
+  36   2            break;
+  37   2          default:
+  38   2            output_num = '?';
+  39   2        }
+  40   1      }
+  41          
+  42          void Arr_Refresh () {
+  43   1        if (output_num != '?') {
+  44   2          enter_psw [input_flag] = output_num;
+  45   2        }
+  46   1        else if (input_flag != 0){
+  47   2          input_flag -= 1;
+  48   2        }
+  49   1        else if (input_flag == 0)
+  50   1          input_flag == 6;
+*** WARNING C275 IN LINE 50 OF main.c: expression with possibly no effect
+  51   1      }
+  52          
+  53          void LCD_Refresh () {
+C51 COMPILER V9.57.0.0   MAIN                                                              05/28/2018 01:37:38 PAGE 2   
+
+  54   1        PutString (1,1,"Enter password: ");
+  55   1        PutString (2,1,&enter_psw);
+  56   1        ClearBit  (2,7);
+  57   1      }
+  58          
+  59          int main (void) {
+  60   1        delay_ms (5);
+  61   1      
+  62   1        Initialize_LCD();
+  63   1        ClearLine(1);
+  64   1        ClearLine(2);
+  65   1        PutString(1,1,"Fuck Bug!");
+  66   1        
+  67   1        while (1) {
+  68   2          key_number = read_key ();
+  69   2          if (key_number != -1) {
+  70   3            PutString (1,1,"Enter password:");
+  71   3            num_judge ();
+  72   3            while (read_key () == -1) {
+  73   4              delay_5us ();
+  74   4              if (read_key () == -1) {
+  75   5                shift_flag = 1;
+  76   5                break;
+  77   5              } 
+  78   4              continue;
+  79   4            }
+  80   3          }
+  81   2      
+  82   2          if (shift_flag == 1) {
+  83   3            if (input_flag == 0) {
+  84   4              ClearLine (2);
+  85   4            }
+  86   3            Arr_Refresh ();
+  87   3            LCD_Refresh ();
+  88   3            input_flag += 1;
+  89   3      
+  90   3            if (input_flag ==6) {
+  91   4              input_flag = 0;
+  92   4            }
+  93   3            shift_flag = 0;
+  94   3          }
+  95   2      
+  96   2          // if (input_flag == 0) {
+  97   2          //  if ((input_flag == 0)&&(*enter_psw == *password)) {
+  98   2          //    ClearLine(1);
+  99   2          //    PutString (1,3,"Yes,Unlock !");
+ 100   2          //    ClearLine(2);
+ 101   2          //    P14 = 1;
+ 102   2          //  } 
+ 103   2          // }
+ 104   2        }
+ 105   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =     79    ----
-   CONSTANT SIZE    =     10    ----
-   XDATA SIZE       =   ----    ----
+   CODE SIZE        =    248    ----
+   CONSTANT SIZE    =     43    ----
+   XDATA SIZE       =      6    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =      7       1
+   DATA SIZE        =      9    ----
    IDATA SIZE       =   ----    ----
-   BIT SIZE         =   ----    ----
+   BIT SIZE         =      1    ----
+C51 COMPILER V9.57.0.0   MAIN                                                              05/28/2018 01:37:38 PAGE 3   
+
    EDATA SIZE       =   ----    ----
    HDATA SIZE       =   ----    ----
    XDATA CONST SIZE =   ----    ----
    FAR CONST SIZE   =   ----    ----
 END OF MODULE INFORMATION.
-
-C51 COMPILER V9.56.0.0   MAIN                                                              05/23/2018 19:06:46 PAGE 2   
 
 
 C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

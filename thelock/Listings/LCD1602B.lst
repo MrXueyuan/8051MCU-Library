@@ -1,10 +1,10 @@
-C51 COMPILER V9.56.0.0   LCD1602B                                                          05/23/2018 18:56:38 PAGE 1   
+C51 COMPILER V9.57.0.0   LCD1602B                                                          05/28/2018 01:37:37 PAGE 1   
 
 
-C51 COMPILER V9.56.0.0, COMPILATION OF MODULE LCD1602B
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE LCD1602B
 OBJECT MODULE PLACED IN .\Objects\LCD1602B.obj
-COMPILER INVOKED BY: D:\Program Files\Keil C51\C51\BIN\C51.EXE LCD1602B.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Li
-                    -stings\LCD1602B.lst) TABS(2) OBJECT(.\Objects\LCD1602B.obj)
+COMPILER INVOKED BY: E:\STCMCU\Keil-v5\C51\BIN\C51.EXE LCD1602B.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Listings\L
+                    -CD1602B.lst) TABS(2) OBJECT(.\Objects\LCD1602B.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
   52          #define C_OFF       0x08    //turn off LCD
   53          #define C_ON        0x0C    //turn on  LCD
   54          #define C_FLASH     0x0D    //turn on  LCD, flash 
-C51 COMPILER V9.56.0.0   LCD1602B                                                          05/23/2018 18:56:38 PAGE 2   
+C51 COMPILER V9.57.0.0   LCD1602B                                                          05/28/2018 01:37:37 PAGE 2   
 
   55          #define C_CURSOR    0x0E    //turn on  LCD and cursor
   56          #define C_FLASH_ALL   0x0F    //turn on  LCD and cursor, flash
@@ -126,7 +126,7 @@ line level    source
  114          
  115          /**********************************************/
  116          void Write_DIS_Data(u8 dat)   //write the display data to LCD
-C51 COMPILER V9.56.0.0   LCD1602B                                                          05/23/2018 18:56:38 PAGE 3   
+C51 COMPILER V9.57.0.0   LCD1602B                                                          05/28/2018 01:37:37 PAGE 3   
 
  117          {
  118   1        LCD_RS = 0;
@@ -149,7 +149,7 @@ line level    source
  135   1      }
  136          
  137          
- 138          /*********  ≥ı ºªØ∫Ø ˝  **************************/
+ 138          /*********  ÂàùÂßãÂåñÂáΩÊï∞ **************************/
  139          void Initialize_LCD(void)   //intilize LCD, input none, output none
  140          {
  141   1        LCD_ENA = 0;
@@ -190,35 +190,43 @@ line level    source
  176   1        for(i=0; i<LineLenth; i++)  Write_DIS_Data(' ');
  177   1      }
  178          
-C51 COMPILER V9.56.0.0   LCD1602B                                                          05/23/2018 18:56:38 PAGE 4   
+C51 COMPILER V9.57.0.0   LCD1602B                                                          05/28/2018 01:37:37 PAGE 4   
 
- 179          
- 180          /****************** –¥“ª∏ˆ◊÷∑˚£¨÷∏∂®––°¢¡–∫Õ◊÷∑˚ ****************************/
- 181          void  WriteChar(u8 hang,u8 lie,u8 dat)
- 182          {
- 183   1        if((hang == 0) || (hang > 2))   return; 
- 184   1        if((lie == 0) || (lie > LineLenth)) return;
- 185   1        Write_AC(hang,lie); //set the AC pointer
- 186   1        Write_DIS_Data(dat);
- 187   1      }
- 188          
- 189          /****************** –¥“ª∏ˆ◊÷∑˚¥Æ£¨÷∏∂®––°¢¡–∫Õ◊÷∑˚¥Æ ◊µÿ÷∑ ****************************/
- 190          void PutString(u8 hang,u8 lie,u8 *puts)
- 191          {
- 192   1        for ( ;  *puts != 0;  puts++)   //”ˆµΩÕ£÷π∑˚0Ω· ¯
- 193   1        {
- 194   2          WriteChar(hang, lie, *puts);
- 195   2          if(++lie > 20)  break;
- 196   2        }
- 197   1      }
- 198          
- 199          
- 200          //******************** LCD40 Module END ***************************
- 201          
+ 179          /**********************************************/
+ 180          void ClearBit(u8 hang,u8 lie)
+ 181          {
+ 182   1        if((hang == 0) || (hang > 2))   return;
+ 183   1        if((lie == 0) || (lie > 16))    return;
+ 184   1        Write_AC(hang,lie);
+ 185   1        Write_DIS_Data(' ');
+ 186   1      }
+ 187          
+ 188          /****************** ÂÜô‰∏Ä‰∏™Â≠óÁ¨¶ÔºåÊåáÂÆöË°å„ÄÅÂàóÂíåÂ≠óÁ¨¶ ****************************/
+ 189          void  WriteChar(u8 hang,u8 lie,u8 dat)
+ 190          {
+ 191   1        if((hang == 0) || (hang > 2))   return; 
+ 192   1        if((lie == 0) || (lie > LineLenth)) return;
+ 193   1        Write_AC(hang,lie); //set the AC pointer
+ 194   1        Write_DIS_Data(dat);
+ 195   1      }
+ 196          
+ 197          /****************** ÂÜô‰∏Ä‰∏™Â≠óÁ¨¶‰∏≤ÔºåÊåáÂÆöË°å„ÄÅÂàóÂíåÂ≠óÁ¨¶‰∏≤È¶ñÂú∞ÂùÄ ****************************
+             -/
+ 198          void  PutString(u8 hang,u8 lie,u8 *puts)
+ 199          {
+ 200   1        for ( ;  *puts != 0;  puts++)   //ÈÅáÂà∞ÂÅúÊ≠¢Á¨¶0ÁªìÊùü
+ 201   1        {
+ 202   2          WriteChar(hang, lie, *puts);
+ 203   2          if(++lie > 20)  break;
+ 204   2        }
+ 205   1      }
+ 206          
+ 207          //******************** LCD40 Module END ***************************
+ 208          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    440    ----
+   CODE SIZE        =    461    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

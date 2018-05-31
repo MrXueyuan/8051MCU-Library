@@ -82,7 +82,6 @@
                 "E:/STCMCU/Keil-v5/C51/*"
             ],
             "defines": [],
-            "intelliSenseMode": "C51",
             "browse": {
                 "path": [
                     "${workspaceFolder}",
@@ -90,7 +89,8 @@
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "intelliSenseMode": "msvc-x64"
         }
     ],
     "version": 3
