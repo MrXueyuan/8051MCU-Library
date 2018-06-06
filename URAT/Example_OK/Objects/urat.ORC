@@ -1,4 +1,4 @@
-$08000800  _SendData
+$80000000  _SendData
 $1E00088E  _SendString
-$080000E0  Delay1000ms
-$18000000  Uart
+$1E0008CE  main
+$80000000  uart1
