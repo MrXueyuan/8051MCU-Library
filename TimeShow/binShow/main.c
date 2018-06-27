@@ -100,7 +100,7 @@ void display_show (void)
     DP  = a_displays [16];
     //分钟-个位
     DW4 = 0;
-    if (minute%10==0)
+    if (minute%10==0)0
         if ((minute/10)!=0)
             DP  = a_displays [0];
         else if (count>=10)

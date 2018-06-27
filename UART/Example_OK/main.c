@@ -1,15 +1,16 @@
-#include "reg51.h"
-#define FOSC  18432000L
+#include "stc12.h"
+#define FOSC  11059200L
 #define BAUD 115200
-sfr AUXR  =0x8E;
+//sfr AUXR  =0x8E;
 sfr TH2   =0xD6;
 sfr TL2   =0xD7;
 bit busy=0;
 xdata char menu[]={"\r\n------main menu---------------"
-	                 "\r\n     input 1:  Control LED10 "
-                   "\r\n     input 2:  Control LED9 "
-	                 "\r\n     other  :  Exit Program"
+	                 "\r\n     input 1:  反转 io P1^0"
+                   "\r\n     input 2:  反转 io P1^1"
+	                 "\r\n     other  :  重新输入"
 	                 "\r\n------end menu----------------"
+									 "\r\n"
             };
 	
 void SendData(unsigned char dat)
@@ -35,8 +36,8 @@ void uart1() interrupt 4
 void main()
 {
 	unsigned char c;
-	P46=0;
-	P47=0;
+	P10=0;
+	P11=0;
 	SCON=0x50;
 	AUXR=0x14;
 	AUXR|=0x01;
@@ -49,13 +50,18 @@ void main()
 		 if(RI==1)
 		 {
 			 c=SBUF;
-			 if(c==0x31)
-				   P46=!P46;
-			 else if(c==0x32)
-				   P47=!P47;
+			 if(c==0x31) {
+				 P10=!P10;
+				 SendString ("\r\n命令已执行: IO口-P1^0反转.\r\n");
+			 }
+			 else if(c==0x32) {
+				 P11=!P11;
+				 SendString ("\r\n命令已执行: IO口-P1^1反转.\r\n");
+			 }
 			 else 
 			 {
-				   SendString("\r\n Exit Program");
+				   SendString("\r\n ---Res---");
+					 SendString(&menu);
 			 }
 		 }    
 	 }
