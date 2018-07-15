@@ -8,7 +8,7 @@ typedef unsigned short ushort;
 typedef unsigned int   uint;
 
 sbit    SCL=P1^0;
-sbit    SDA=P1^2;
+sbit    SDA=P1^1;
 //****************************************
 // 定义MPU6050内部地址
 //****************************************
@@ -127,6 +127,8 @@ void delay(unsigned int k)
 //************************************************************************************************
 void Delay5us()
 {
+	_nop_();_nop_();_nop_();_nop_();
+	_nop_();_nop_();_nop_();_nop_();
 	_nop_();_nop_();_nop_();_nop_();
 	_nop_();_nop_();_nop_();_nop_();
 	_nop_();_nop_();_nop_();_nop_();
@@ -268,7 +270,7 @@ int GetData(uchar REG_Address)
 //******************************************************************************************************
 void Display10BitData(int value)
 {  uchar i;
-	value/=64;							//转换为10位数据
+//	value/=64;							//转换为10位数据
 	lcd_printf(dis, value);			//转换数据显示
 	for(i=0;i<6;i++)
 	{
